@@ -51,6 +51,12 @@ static cudaError_t report_error(void) {
 }
 
 int main(int argc, char *argv[]) {
+    unsigned device_id = 0;
+    if(argc >= 2 && std::sscanf(argv[1], "-d%u", &device_id) == 1) {
+        --argc; ++argv;
+    }
+    cudaSetDevice(device_id); report_error();
+
     unsigned blk_size = 128;
     if(argc >= 2) {
         std::sscanf(argv[1], "%u", &blk_size);
