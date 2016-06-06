@@ -71,6 +71,8 @@ int main(int argc, char *argv[]) {
     if(argc >= 4) {
         std::sscanf(argv[3], "%u", &times);
     }
+    printf("Block configuration: %u x %u (%u)\n", blk_size, blk_cnt, blk_size * blk_cnt);
+    printf("Test %d times\n", times);
 
     int *a;
     cudaMalloc(&a, blk_cnt * blk_size * sizeof (int)); report_error();
