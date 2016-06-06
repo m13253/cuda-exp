@@ -67,6 +67,10 @@ int main(int argc, char *argv[]) {
         std::sscanf(argv[2], "%u", &blk_cnt);
         blk_cnt = ((blk_cnt-1)/4+1)*4/2;
     }
+    unsigned times = 10;
+    if(argc >= 4) {
+        std::sscanf(argv[3], "%u", &times);
+    }
 
     int *a;
     cudaMalloc(&a, blk_cnt * blk_size * sizeof (int)); report_error();
@@ -85,17 +89,23 @@ int main(int argc, char *argv[]) {
     cudaEventRecord(start); report_error();
     cudaEventSynchronize(start); report_error();
 
-    scan<<<blk_cnt, blk_size/2, blk_size * sizeof (int)>>>(a, blk_sum); report_error();
+    for(unsigned i = 0; i < times; ++i) {
+        scan<<<blk_cnt, blk_size/2, blk_size * sizeof (int)>>>(a, blk_sum); report_error();
+    }
 
     cudaEventRecord(step1); report_error();
     cudaEventSynchronize(step1); report_error();
 
-    scan<<<1, blk_cnt/2, blk_cnt * sizeof (int)>>>(blk_sum, NULL); report_error();
+    for(unsigned i = 0; i < times; ++i) {
+        scan<<<1, blk_cnt/2, blk_cnt * sizeof (int)>>>(blk_sum, NULL); report_error();
+    }
 
     cudaEventRecord(step2); report_error();
     cudaEventSynchronize(step2); report_error();
 
-    fix<<<blk_cnt*2, blk_size/2>>>(a, blk_sum); report_error();
+    for(unsigned i = 0; i < times; ++i) {
+        fix<<<blk_cnt*2, blk_size/2>>>(a, blk_sum); report_error();
+    }
 
     cudaEventRecord(end); report_error();
     cudaEventSynchronize(end); report_error();
@@ -113,9 +123,9 @@ int main(int argc, char *argv[]) {
     cudaFree(blk_sum); report_error();
     cudaFree(a); report_error();
 
-    std::printf("step 1 scan: %.9g s\n", elapsed01 * 0.001f);
-    std::printf("step 2 scan: %.9g s\n", elapsed12 * 0.001f);
-    std::printf("step 3 fix:  %.9g s\n", elapsed23 * 0.001f);
+    std::printf("step 1 scan: %.9g s\n", elapsed01 * 0.001f / times);
+    std::printf("step 2 scan: %.9g s\n", elapsed12 * 0.001f / times);
+    std::printf("step 3 fix:  %.9g s\n", elapsed23 * 0.001f / times);
 
     return 0;
 }
