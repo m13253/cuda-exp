@@ -1,4 +1,4 @@
-all: scan_0 scan_0_cpu scan_1 scan_1_cpu scan_2
+all: scan_0 scan_0_cpu scan_1 scan_1_cpu scan_2 scan_2_cpu
 
 %: %.cu
 	nvcc -Xcompiler '-std=c++98 -Wall' -g -O3 -o $@ $<
