@@ -1,11 +1,10 @@
-all: scan_0 scan_0_cpu scan_1 scan_1_cpu scan_2 scan_2_cpu
+all: scan_0_cpu scan_0_gpu scan_1_cpu scan_1_gpu scan_2_cpu scan_2_gpu
 
-%: %.cu
-	nvcc -o $@ $<
-	#nvcc -Xcompiler '-std=c++98 -Wall' -g -O3 -o $@ $<
+%_gpu: %.cu
+	nvcc -O3 -g -o $@ $<
 
-%: %.cc
-	$(CXX) -std=c++98 -Wall -g -O3 -march=native -mtune=native -o $@ $<
+%_cpu: %.cc
+	$(CXX) -O3 -g -o $@ $<
 
 clean:
-	-rm all
+	rm -f scan_0_cpu scan_0_gpu scan_1_cpu scan_1_gpu scan_2_cpu scan_2_gpu
