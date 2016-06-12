@@ -13,10 +13,11 @@ static void print_matrix(const char *name, const float *matrix, int h, int w) {
 
 __global__ static void matrix_mul(float q[], const float a[], const float b[], int ah, int aw, int bw) {
     int i = threadIdx.x, j = threadIdx.y;
-    q[i*bw+j] = 0;
+    float s = 0;
     for(int k = 0; k < aw; ++k) {
-        q[i*bw+j] += a[i*aw+k] * b[k*bw+j];
+        s += a[i*aw+k] * b[k*bw+j];
     }
+    q[i*bw+j] = s;
 }
 
 static cudaError_t report_error(void) {
@@ -60,8 +61,8 @@ int main(int argc, char *argv[]) {
     cudaMalloc(&d_a, ah*aw*sizeof *d_a); report_error();
     cudaMalloc(&d_b, aw*bw*sizeof *d_b); report_error();
     cudaMalloc(&d_c, ah*bw*sizeof *d_c); report_error();
-    cudaMemcpy(d_a, a, sizeof a, cudaMemcpyHostToDevice); report_error();
-    cudaMemcpy(d_b, b, sizeof b, cudaMemcpyHostToDevice); report_error();
+    cudaMemcpy(d_a, a, ah*aw*sizeof *a, cudaMemcpyHostToDevice); report_error();
+    cudaMemcpy(d_b, b, ah*bw*sizeof *b, cudaMemcpyHostToDevice); report_error();
 
     matrix_mul<<<1, dim3(ah, bw)>>>(d_c, d_a, d_b, ah, aw, bw); report_error();
 

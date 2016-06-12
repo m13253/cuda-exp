@@ -14,10 +14,11 @@ static void print_matrix(const char *name, const float *matrix, int h, int w) {
 static void matrix_mul(float q[], const float a[], const float b[], int ah, int aw, int bw) {
     for(int i = 0; i < ah; ++i) {
         for(int j = 0; j < bw; ++j) {
-            q[i*bw+j] = 0;
+            float s = 0;
             for(int k = 0; k < aw; ++k) {
-                q[i*bw+j] += a[i*aw+k] * b[k*bw+j];
+                s += a[i*aw+k] * b[k*bw+j];
             }
+            q[i*bw+j] = s;
         }
     }
 }
