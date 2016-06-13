@@ -37,7 +37,7 @@ static void matrix_mul(float q[], const float a[], const float b[], int size) {
 int main(int argc, char *argv[]) {
     int size = 8;
     if(argc >= 2) {
-        std::scanf("%d", &size);
+        std::sscanf(argv[1], "%d", &size);
     }
 
     float *a = new float[size*size];

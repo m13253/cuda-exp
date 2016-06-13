@@ -22,13 +22,24 @@ static void print_matrix(const char *name, const float *matrix, int h, int w) {
     }
 }
 
-__global__ static void matrix_mul(float q[], const float a[], const float b[], int size) {
+__device__ static int calc_index(int bi, int bj, int i, int j, int size, int blocks) {
+    return (bi*size + i)*size*blocks + bj*size+j;
+}
+
+__global__ static void matrix_mul(float q[], const float a[], const float b[], int size, int blocks) {
+    extern __shared__ float shared[];
+    float *tile_a = shared;
+    float *tile_b = shared + size*size;
     int i = threadIdx.x, j = threadIdx.y;
+    tile_a[i*size+j] = a[calc_index(blockIdx.x, blockIdx.z, i, j, size, blocks)];
+    tile_b[i*size+j] = b[calc_index(blockIdx.z, blockIdx.y, i, j, size, blocks)];
+    __syncthreads();
     float s = 0;
     for(int k = 0; k < size; ++k) {
-        s += a[i*size+k] * b[k*size+j];
+        s += tile_a[i*size+k] * tile_b[k*size+j];
     }
-    q[i*size+j] = s;
+    // This is a bad algorithm
+    atomicAdd(&q[calc_index(blockIdx.x, blockIdx.y, i, j, size, blocks)], s);
 }
 
 static cudaError_t report_error(void) {
@@ -45,6 +56,11 @@ int main(int argc, char *argv[]) {
     if(argc >= 2) {
         std::sscanf(argv[1], "%d", &size);
     }
+    int block_size = 8;
+    if(argc >= 3) {
+        std::sscanf(argv[2], "%d", &block_size);
+    }
+    size = ((size-1)/block_size+1) * block_size;
 
     float *a = new float[size*size];
     float *b = new float[size*size];
@@ -63,8 +79,9 @@ int main(int argc, char *argv[]) {
     cudaMalloc(&d_c, size*size*sizeof *d_c); report_error();
     cudaMemcpy(d_a, a, size*size*sizeof *a, cudaMemcpyHostToDevice); report_error();
     cudaMemcpy(d_b, b, size*size*sizeof *b, cudaMemcpyHostToDevice); report_error();
+    cudaMemset(d_c, 0, size*size*sizeof *d_c); report_error();
 
-    matrix_mul<<<1, dim3(size, size)>>>(d_c, d_a, d_b, size); report_error();
+    matrix_mul<<<dim3(size/block_size, size/block_size, size/block_size), dim3(block_size, block_size), block_size*block_size*sizeof (float)*2>>>(d_c, d_a, d_b, block_size, size/block_size); report_error();
 
     float *c = new float[size*size];
     cudaMemcpy(c, d_c, size*size*sizeof *c, cudaMemcpyDeviceToHost); report_error();
