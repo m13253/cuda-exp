@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
+#include <ctime>
 
 static void print_matrix(const char *name, const float *matrix, int h, int w) {
     int eff_h = std::min(h, 8);
@@ -39,6 +41,7 @@ int main(int argc, char *argv[]) {
     if(argc >= 2) {
         std::sscanf(argv[1], "%d", &size);
     }
+    bool bench = argc >= 4 && std::strcmp(argv[3], "bench") == 0;
 
     float *a = new float[size*size];
     float *b = new float[size*size];
@@ -53,9 +56,20 @@ int main(int argc, char *argv[]) {
 
     float *c = new float[size*size];
 
+    clock_t start, end;
+    start = std::clock();
+
     matrix_mul(c, a, b, size);
 
-    print_matrix("a * b", c, size, size);
+    end = std::clock();
+    double elapsed = (double) (end - start) / CLOCKS_PER_SEC;
+
+    if(!bench) {
+        print_matrix("a * b", c, size, size);
+        std::printf("%.9lg s elapsed\n", elapsed);
+    } else {
+        std::printf("%.9lg", elapsed);
+    }
 
     delete[] c;
     delete[] b;

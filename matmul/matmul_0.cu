@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
         cudaMemcpy(c, d_c, size*size*sizeof *c, cudaMemcpyDeviceToHost); report_error();
         print_matrix("a * b", c, size, size);
         delete[] c;
-        std::printf("%.9g s elapsed", elapsed * 0.001f);
+        std::printf("%.9g s elapsed\n", elapsed * 0.001f);
     } else {
         std::printf("%.9g", elapsed * 0.001f);
     }

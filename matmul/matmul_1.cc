@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
+#include <ctime>
 
 static void print_matrix(const char *name, const float *matrix, int h, int w) {
     int eff_h = std::min(h, 8);
@@ -66,6 +68,7 @@ int main(int argc, char *argv[]) {
         std::sscanf(argv[2], "%d", &block_size);
     }
     size = ((size-1)/block_size+1) * block_size;
+    bool bench = argc >= 4 && std::strcmp(argv[3], "bench") == 0;
 
     float *a = new float[size*size];
     float *b = new float[size*size];
@@ -75,14 +78,27 @@ int main(int argc, char *argv[]) {
     for(int i = 0; i < size*size; ++i) {
         b[i] = i+1;
     }
-    print_matrix("a", a, size, size);
-    print_matrix("b", b, size, size);
+    if(!bench) {
+        print_matrix("a", a, size, size);
+        print_matrix("b", b, size, size);
+    }
 
     float *c = new float[size*size];
 
+    clock_t start, end;
+    start = std::clock();
+
     matrix_mul(c, a, b, block_size, size/block_size);
 
-    print_matrix("a * b", c, size, size);
+    end = std::clock();
+    double elapsed = (double) (end - start) / CLOCKS_PER_SEC;
+
+    if(!bench) {
+        print_matrix("a * b", c, size, size);
+        std::printf("%.9lg s elapsed\n", elapsed);
+    } else {
+        std::printf("%.9lg", elapsed);
+    }
 
     delete[] c;
     delete[] b;
